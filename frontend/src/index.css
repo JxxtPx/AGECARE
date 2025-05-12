@@ -1,0 +1,172 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  background-color: #f8fafc;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', sans-serif;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 transform hover:-translate-y-0.5;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary-600 text-white hover:bg-secondary-700 focus:ring-secondary-500 transform hover:-translate-y-0.5;
+  }
+
+  .btn-outline {
+    @apply border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-primary-500 transform hover:-translate-y-0.5;
+  }
+
+  .form-input {
+    @apply block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm transition-colors duration-200;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-card p-6 transition-all duration-200 hover:shadow-card-hover border border-gray-100;
+  }
+
+  .page-header {
+    @apply mb-8;
+  }
+
+  .page-title {
+    @apply text-3xl font-display font-bold text-gray-900;
+  }
+
+  .page-subtitle {
+    @apply mt-2 text-lg text-gray-600;
+  }
+
+  .section-title {
+    @apply text-xl font-display font-semibold text-gray-900 mb-4;
+  }
+
+  .sidebar-link {
+    @apply flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200;
+  }
+
+  .sidebar-link.active {
+    @apply bg-primary-50 text-primary-700;
+  }
+
+  .sidebar-link:not(.active) {
+    @apply text-gray-600 hover:bg-gray-50 hover:text-gray-900;
+  }
+
+  .notification-badge {
+    @apply absolute -top-1 -right-1 w-5 h-5 text-xs flex items-center justify-center text-white bg-red-500 rounded-full;
+  }
+
+  .dropdown-menu {
+    @apply absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl overflow-hidden z-20 animate-fade-in border border-gray-100;
+  }
+
+  .dropdown-item {
+    @apply flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s ease-out;
+}
+
+/* Loading Skeleton */
+.skeleton {
+  @apply animate-pulse bg-gray-200 rounded;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 rounded-full;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full hover:bg-gray-400 transition-colors;
+}
+
+/* Card Gradients */
+.card-gradient-primary {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+}
+
+.card-gradient-secondary {
+  background: linear-gradient(135deg, #64748b 0%, #334155 100%);
+}
+
+.card-gradient-success {
+  background: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
+}
+
+.card-gradient-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
+}
+
+.card-gradient-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+}
+
+/* Ghost Loading Animation */
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+.ghost-loading {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(to right, #f6f7f8 8%, #edeef1 18%, #f6f7f8 33%);
+  background-size: 2000px 100%;
+}
