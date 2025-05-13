@@ -176,11 +176,14 @@ const ManageShifts = () => {
   };
 
   const filteredShifts = shifts.filter((shift) => {
-    const matchesSearch =
-      shift.staff.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      shift.resident.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const staffName = shift?.staff?.name?.toLowerCase() || "";
+    const residentName = shift?.resident?.name?.toLowerCase() || "";
 
-    const normalizedShiftStatus = shift.status.toLowerCase();
+    const matchesSearch =
+      staffName.includes(searchTerm.toLowerCase()) ||
+      residentName.includes(searchTerm.toLowerCase());
+
+    const normalizedShiftStatus = shift?.status?.toLowerCase() || "";
     const normalizedFilterStatus = filterStatus.toLowerCase();
 
     const matchesStatus =
@@ -188,11 +191,11 @@ const ManageShifts = () => {
       normalizedShiftStatus === normalizedFilterStatus;
 
     const matchesResident =
-      !filterResident || shift.resident._id === filterResident;
+      !filterResident || shift?.resident?._id === filterResident;
 
-    const matchesRole = !filterRole || shift.staff.role === filterRole;
+    const matchesRole = !filterRole || shift?.staff?.role === filterRole;
 
-    const shiftDate = new Date(shift.date);
+    const shiftDate = new Date(shift?.date);
     const fromDate = filterFromDate ? new Date(filterFromDate) : null;
     const toDate = filterToDate ? new Date(filterToDate) : null;
 
@@ -379,44 +382,49 @@ const ManageShifts = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredShifts.map((shift) => (
-                <tr key={shift._id} className="hover:bg-gray-50">
+                <tr
+                  key={shift._id || Math.random()}
+                  className="hover:bg-gray-50"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
-                      {shift.staff.name}
+                      {shift?.staff?.name || "Unknown Staff"}
                     </div>
                     <div className="text-sm text-gray-500 capitalize">
-                      {shift.staff.role}
+                      {shift?.staff?.role || "N/A"}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {shift.resident.fullName}
+                      {shift?.resident?.fullName || "Unknown Resident"}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {new Date(shift.date)
-                        .toLocaleDateString("en-GB", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })
-                        .replace(/ /g, "-")
-                        .replace(",", "")}
+                      {shift?.date
+                        ? new Date(shift.date)
+                            .toLocaleDateString("en-GB", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })
+                            .replace(/ /g, "-")
+                            .replace(",", "")
+                        : "N/A"}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {shift.startTime} - {shift.endTime}
+                      {shift?.startTime || "?"} - {shift?.endTime || "?"}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900 capitalize">
-                      {shift.type}
+                      {shift?.type || "N/A"}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusBadge status={shift.status} />
+                    <StatusBadge status={shift?.status || "pending"} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button

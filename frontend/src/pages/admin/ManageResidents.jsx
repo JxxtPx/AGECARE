@@ -345,7 +345,8 @@ const ManageResidents = () => {
     }
   };
 
-  const filteredResidents = residents.filter((resident) => {
+const filteredResidents = (residents || []).filter((resident) => {
+
     const fullName = resident.fullName?.toLowerCase() || "";
     const phone = resident.contactInfo?.phone || "";
 

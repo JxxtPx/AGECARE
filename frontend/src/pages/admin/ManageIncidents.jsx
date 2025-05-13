@@ -50,14 +50,21 @@ const ManageIncidents = () => {
     }
   }
 
-  const filteredIncidents = incidents.filter(incident => {
-    const matchesSearch = 
-      incident.reportedBy.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      incident.resident.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      incident.description.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesFilter = filterStatus === 'all' || incident.status === filterStatus
-    return matchesSearch && matchesFilter
-  })
+const filteredIncidents = incidents.filter(incident => {
+  const reportedByName = incident?.reportedBy?.name?.toLowerCase() || 'ReportedBy';
+  const residentName = incident?.resident?.fullName?.toLowerCase() || 'For';
+  const description = incident?.description?.toLowerCase() || 'Reason';
+
+  const matchesSearch =
+    reportedByName.includes(searchTerm.toLowerCase()) ||
+    residentName.includes(searchTerm.toLowerCase()) ||
+    description.includes(searchTerm.toLowerCase());
+
+  const matchesFilter = filterStatus === 'all' || incident.status === filterStatus;
+
+  return matchesSearch && matchesFilter;
+});
+
 
   if (loading) {
     return <LoadingSpinner fullScreen />
