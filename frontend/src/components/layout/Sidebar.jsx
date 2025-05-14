@@ -41,7 +41,6 @@ const Sidebar = () => {
   }, []);
 
   useEffect(() => {
-    // Mock pinned messages - in real app, fetch from backend
     if (user?.role === "admin") {
       setPinnedMessages([
         {
@@ -70,252 +69,63 @@ const Sidebar = () => {
   const getNavLinks = () => {
     if (!user) return [];
 
-    const iconProps = {
-      size: 20,
-      className: "flex-shrink-0 transition-colors duration-150",
-    };
+    const iconProps = { size: 20, className: "flex-shrink-0" };
 
     switch (user.role) {
       case "admin":
         return [
-          {
-            to: "/admin",
-            icon: <FiHome {...iconProps} />,
-            text: "Dashboard",
-            color: "text-blue-500",
-          },
-          {
-            to: "/admin/users",
-            icon: <FiUsers {...iconProps} />,
-            text: "Manage Users",
-            color: "text-indigo-500",
-          },
-          {
-            to: "/admin/residents",
-            icon: <FiHeart {...iconProps} />,
-            text: "Manage Residents",
-            color: "text-pink-500",
-          },
-          {
-            to: "/admin/shifts",
-            icon: <FiCalendar {...iconProps} />,
-            text: "Manage Shifts",
-            color: "text-purple-500",
-          },
-          {
-            to: "/admin/feedbacks",
-            icon: <FiMessageSquare {...iconProps} />,
-            text: "Feedbacks",
-            color: "text-green-500",
-          },
-          {
-            to: "/admin/visit-requests",
-            icon: <FiClock {...iconProps} />,
-            text: "Visit Requests",
-            color: "text-yellow-500",
-          },
-          {
-            to: "/admin/incidents",
-            icon: <FiAlertCircle {...iconProps} />,
-            text: "Incidents",
-            color: "text-red-500",
-          },
-          {
-            to: "/admin/messages",
-            icon: <FiMessageCircle {...iconProps} />,
-            text: "Messages",
-            color: "text-purple-500",
-          },
-          {
-            to: "/admin/settings",
-            icon: <FiSettings {...iconProps} />,
-            text: "Settings",
-            color: "text-gray-500",
-          },
-          {
-            to: "/admin/profile",
-            icon: <FiUser {...iconProps} />,
-            text: "My Profile",
-            color: "text-gray-500",
-          },
-          {
-            to: "/admin/family-requests",
-            icon: <FiUsers {...iconProps} />,
-            text: "Family Requests",
-            color: "text-gray-500",
-          },
+          { to: "/admin", icon: <FiHome {...iconProps} />, text: "Dashboard", color: "text-blue-500" },
+          { to: "/admin/users", icon: <FiUsers {...iconProps} />, text: "Manage Users", color: "text-indigo-500" },
+          { to: "/admin/residents", icon: <FiHeart {...iconProps} />, text: "Manage Residents", color: "text-pink-500" },
+          { to: "/admin/shifts", icon: <FiCalendar {...iconProps} />, text: "Manage Shifts", color: "text-purple-500" },
+          { to: "/admin/feedbacks", icon: <FiMessageSquare {...iconProps} />, text: "Feedbacks", color: "text-green-500" },
+          { to: "/admin/visit-requests", icon: <FiClock {...iconProps} />, text: "Visit Requests", color: "text-yellow-500" },
+          { to: "/admin/incidents", icon: <FiAlertCircle {...iconProps} />, text: "Incidents", color: "text-red-500" },
+          { to: "/admin/messages", icon: <FiMessageCircle {...iconProps} />, text: "Messages", color: "text-purple-500" },
+          { to: "/admin/settings", icon: <FiSettings {...iconProps} />, text: "Settings", color: "text-gray-500" },
+          { to: "/admin/profile", icon: <FiUser {...iconProps} />, text: "My Profile", color: "text-gray-500" },
+          { to: "/admin/family-requests", icon: <FiUsers {...iconProps} />, text: "Family Requests", color: "text-gray-500" },
         ];
-
       case "coordinator":
         return [
-          {
-            to: "/coordinator",
-            icon: <FiHome {...iconProps} />,
-            text: "Dashboard",
-            color: "text-blue-500",
-          },
-          {
-            to: "/coordinator/care-plans",
-            icon: <FiClipboard {...iconProps} />,
-            text: "Care Plans",
-            color: "text-indigo-500",
-          },
-          {
-            to: "/coordinator/tasks",
-            icon: <FiCheckSquare {...iconProps} />,
-            text: "Manage Tasks",
-            color: "text-green-500",
-          },
-          {
-            to: "/coordinator/flag-notes",
-            icon: <FiFlag {...iconProps} />,
-            text: "Flag Notes",
-            color: "text-red-500",
-          },
-          {
-            to: "/coordinator/messages",
-            icon: <FiMessageCircle {...iconProps} />,
-            text: "Messages",
-            color: "text-purple-500",
-          },
-          {
-            to: "/coordinator/profile",
-            icon: <FiUser {...iconProps} />,
-            text: "My Profile",
-            color: "text-gray-500",
-          },
+          { to: "/coordinator", icon: <FiHome {...iconProps} />, text: "Dashboard", color: "text-blue-500" },
+          { to: "/coordinator/care-plans", icon: <FiClipboard {...iconProps} />, text: "Care Plans", color: "text-indigo-500" },
+          { to: "/coordinator/tasks", icon: <FiCheckSquare {...iconProps} />, text: "Manage Tasks", color: "text-green-500" },
+          { to: "/coordinator/flag-notes", icon: <FiFlag {...iconProps} />, text: "Flag Notes", color: "text-red-500" },
+          { to: "/coordinator/messages", icon: <FiMessageCircle {...iconProps} />, text: "Messages", color: "text-purple-500" },
+          { to: "/coordinator/profile", icon: <FiUser {...iconProps} />, text: "My Profile", color: "text-gray-500" },
         ];
-
       case "nurse":
         return [
-          {
-            to: "/nurse",
-            icon: <FiHome {...iconProps} />,
-            text: "Dashboard",
-            color: "text-blue-500",
-          },
-          {
-            to: "/nurse/shifts",
-            icon: <FiCalendar {...iconProps} />,
-            text: "My Shifts",
-            color: "text-purple-500",
-          },
-          {
-            to: "/nurse/shift-notes",
-            icon: <FiFileText {...iconProps} />,
-            text: "Shift Notes",
-            color: "text-indigo-500",
-          },
-          {
-            to: "/nurse/residents",
-            icon: <FiHeart {...iconProps} />,
-            text: "View Residents",
-            color: "text-pink-500",
-          },
-          {
-            to: "/nurse/incidents",
-            icon: <FiAlertCircle {...iconProps} />,
-            text: "Report Incidents",
-            color: "text-red-500",
-          },
+          { to: "/nurse", icon: <FiHome {...iconProps} />, text: "Dashboard", color: "text-blue-500" },
+          { to: "/nurse/shifts", icon: <FiCalendar {...iconProps} />, text: "My Shifts", color: "text-purple-500" },
+          { to: "/nurse/shift-notes", icon: <FiFileText {...iconProps} />, text: "Shift Notes", color: "text-indigo-500" },
+          { to: "/nurse/residents", icon: <FiHeart {...iconProps} />, text: "View Residents", color: "text-pink-500" },
+          { to: "/nurse/incidents", icon: <FiAlertCircle {...iconProps} />, text: "Report Incidents", color: "text-red-500" },
         ];
-
       case "carer":
         return [
-          {
-            to: "/carer",
-            icon: <FiHome {...iconProps} />,
-            text: "Dashboard",
-            color: "text-blue-500",
-          },
-          {
-            to: "/carer/shifts",
-            icon: <FiCalendar {...iconProps} />,
-            text: "My Shifts",
-            color: "text-purple-500",
-          },
-          {
-            to: "/carer/shift-notes",
-            icon: <FiFileText {...iconProps} />,
-            text: "Shift Notes",
-            color: "text-indigo-500",
-          },
-          {
-            to: "/carer/residents",
-            icon: <FiHeart {...iconProps} />,
-            text: "View Residents",
-            color: "text-pink-500",
-          },
-          {
-            to: "/carer/incidents",
-            icon: <FiAlertCircle {...iconProps} />,
-            text: "Report Incidents",
-            color: "text-red-500",
-          },
+          { to: "/carer", icon: <FiHome {...iconProps} />, text: "Dashboard", color: "text-blue-500" },
+          { to: "/carer/shifts", icon: <FiCalendar {...iconProps} />, text: "My Shifts", color: "text-purple-500" },
+          { to: "/carer/shift-notes", icon: <FiFileText {...iconProps} />, text: "Shift Notes", color: "text-indigo-500" },
+          { to: "/carer/residents", icon: <FiHeart {...iconProps} />, text: "View Residents", color: "text-pink-500" },
+          { to: "/carer/incidents", icon: <FiAlertCircle {...iconProps} />, text: "Report Incidents", color: "text-red-500" },
         ];
-
       case "resident":
         return [
-          {
-            to: "/resident",
-            icon: <FiHome {...iconProps} />,
-            text: "Dashboard",
-            color: "text-blue-500",
-          },
-          {
-            to: "/resident/care-plan",
-            icon: <FiClipboard {...iconProps} />,
-            text: "My Care Plan",
-            color: "text-indigo-500",
-          },
-          {
-            to: "/resident/shift-notes",
-            icon: <FiFileText {...iconProps} />,
-            text: "Shift Notes",
-            color: "text-purple-500",
-          },
-          {
-            to: "/resident/feedback",
-            icon: <FiMessageSquare {...iconProps} />,
-            text: "Submit Feedback",
-            color: "text-green-500",
-          },
-          {
-            to: "/resident/incident",
-            icon: <FiAlertCircle {...iconProps} />,
-            text: "Report Incident",
-            color: "text-red-500",
-          },
+          { to: "/resident", icon: <FiHome {...iconProps} />, text: "Dashboard", color: "text-blue-500" },
+          { to: "/resident/care-plan", icon: <FiClipboard {...iconProps} />, text: "My Care Plan", color: "text-indigo-500" },
+          { to: "/resident/shift-notes", icon: <FiFileText {...iconProps} />, text: "Shift Notes", color: "text-purple-500" },
+          { to: "/resident/feedback", icon: <FiMessageSquare {...iconProps} />, text: "Submit Feedback", color: "text-green-500" },
+          { to: "/resident/incident", icon: <FiAlertCircle {...iconProps} />, text: "Report Incident", color: "text-red-500" },
         ];
-
       case "family":
         return [
-          {
-            to: "/family",
-            icon: <FiHome {...iconProps} />,
-            text: "Dashboard",
-            color: "text-blue-500",
-          },
-          {
-            to: "/family/resident",
-            icon: <FiHeart {...iconProps} />,
-            text: "Resident Profile",
-            color: "text-pink-500",
-          },
-          {
-            to: "/family/visits",
-            icon: <FiClock {...iconProps} />,
-            text: "Visit Requests",
-            color: "text-purple-500",
-          },
-          {
-            to: "/family/shift-notes",
-            icon: <FiFileText {...iconProps} />,
-            text: "Shift Notes",
-            color: "text-indigo-500",
-          },
+          { to: "/family", icon: <FiHome {...iconProps} />, text: "Dashboard", color: "text-blue-500" },
+          { to: "/family/resident", icon: <FiHeart {...iconProps} />, text: "Resident Profile", color: "text-pink-500" },
+          { to: "/family/visits", icon: <FiClock {...iconProps} />, text: "Visit Requests", color: "text-purple-500" },
+          { to: "/family/shift-notes", icon: <FiFileText {...iconProps} />, text: "Shift Notes", color: "text-indigo-500" },
         ];
-
       default:
         return [];
     }

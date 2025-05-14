@@ -58,3 +58,18 @@ exports.setPassword = async (req, res) => {
   await user.save();
   res.json({ message: "Password set successfully. You can now login." });
 };
+
+exports.getMe = async (req, res) => {
+  if (!req.user) {
+    throw createError(401, "Unauthorized");
+  }
+
+  res.json({
+    id: req.user._id,
+    name: req.user.name,
+    email: req.user.email,
+    role: req.user.role,
+    profilePicture: req.user.profilePicture || null,
+    phone: req.user.phone || "",
+  });
+};

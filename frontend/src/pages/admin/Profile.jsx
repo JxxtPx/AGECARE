@@ -1,169 +1,128 @@
-import React, { useState, useContext } from 'react'
-import { FiUser, FiPhone, FiMail, FiCamera, FiTrash2, FiLock } from 'react-icons/fi'
-import { AuthContext } from '../../context/AuthContext'
-import LoadingSpinner from '../../components/common/LoadingSpinner'
-import { toast } from 'react-toastify'
+import React, { useState, useContext } from "react";
+import {
+  FiUser, FiPhone, FiMail, FiCamera, FiTrash2, FiLock,
+} from "react-icons/fi";
+import { AuthContext } from "../../context/AuthContext";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
+import { toast } from "react-toastify";
 import axiosInstance from "../../api/axiosInstance";
 
 const Profile = () => {
-  const { user } = useContext(AuthContext)
-  const [loading, setLoading] = useState(false)
-  const [editMode, setEditMode] = useState(false)
-  const [showPasswordModal, setShowPasswordModal] = useState(false)
-  
-  // Form state using exact backend model fields
+  const { user, setUser } = useContext(AuthContext);
+  const [loading, setLoading] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    phone: user?.phone || '',
-    email: user?.email || '',
-    profilePicture: user?.profilePicture || null
-  })
-  
-  // Password form state
+    name: user?.name || "",
+    phone: user?.phone || "",
+    email: user?.email || "",
+    profilePicture: user?.profilePicture || null,
+  });
+
   const [passwordForm, setPasswordForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  })
-  
-  // Image preview state
-  const [imagePreview, setImagePreview] = useState(user?.profilePicture || null)
-  
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  const [imagePreview, setImagePreview] = useState(user?.profilePicture || null);
+
   const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-  }
-  
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
   const handlePasswordChange = (e) => {
-    const { name, value } = e.target
-    setPasswordForm(prev => ({
-      ...prev,
-      [name]: value
-    }))
-  }
-  
-const handleImageChange = async (e) => {
-  const file = e.target.files[0];
-  if (file) {
+    const { name, value } = e.target;
+    setPasswordForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result);
-    };
+    reader.onloadend = () => setImagePreview(reader.result);
     reader.readAsDataURL(file);
 
     try {
-      const formData = new FormData();
-      formData.append("image", file);
+      const imageForm = new FormData();
+      imageForm.append("image", file);
 
-      const response = await axiosInstance.post("/shared/profile/photo", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      const res = await axiosInstance.post("/shared/profile/photo", imageForm, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
-      const newPhotoUrl = response.data.photo;
-
-      setFormData((prev) => ({
-        ...prev,
-        profilePicture: newPhotoUrl,
-      }));
-
-      // 🔄 Update localStorage
-      const updatedUser = { ...user, profilePicture: newPhotoUrl };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-
-      // Optional: update context globally if setUser is available
-      if (typeof setUser === "function") {
-        setUser(updatedUser);
-      }
-
+      const newPhoto = res.data.photo;
+      setFormData(prev => ({ ...prev, profilePicture: newPhoto }));
+      setUser(prev => ({ ...prev, profilePicture: newPhoto }));
       toast.success("Profile picture uploaded");
-    } catch (error) {
-      console.error("Image upload failed:", error);
+    } catch (err) {
+      console.error("Upload failed:", err);
       toast.error("Failed to upload profile picture");
     }
-  }
-};
+  };
 
-
-  
   const handleRemoveImage = () => {
-    setImagePreview(null)
-    setFormData(prev => ({
-      ...prev,
-      profilePicture: null
-    }))
-  }
-  
-const handleSubmit = async (e) => {
-  e.preventDefault();
+    setImagePreview(null);
+    setFormData(prev => ({ ...prev, profilePicture: null }));
+  };
 
-  try {
-    setLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
 
-    const response = await axiosInstance.put('/shared/profile', {
-      name: formData.name,
-      phone: formData.phone,
-      profilePicture: formData.profilePicture,
-    });
+      const res = await axiosInstance.put("/shared/profile", {
+        name: formData.name,
+        phone: formData.phone,
+        profilePicture: formData.profilePicture,
+      });
 
-    // 🔄 Update localStorage with new name/phone
-    const updatedUser = {
-      ...user,
-      name: formData.name,
-      phone: formData.phone,
-      profilePicture: formData.profilePicture
-    };
-    localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(prev => ({
+        ...prev,
+        name: res.data.name,
+        phone: res.data.phone,
+        profilePicture: res.data.profilePicture,
+      }));
 
-    if (typeof setUser === "function") {
-      setUser(updatedUser);
+      toast.success("Profile updated successfully");
+      setEditMode(false);
+    } catch (err) {
+      console.error("Update failed:", err);
+      toast.error("Failed to update profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error("New passwords do not match");
+      return;
     }
 
-    toast.success("Profile updated successfully");
-    setEditMode(false);
-  } catch (error) {
-    console.error("Profile update failed:", error);
-    toast.error("Failed to update profile");
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      setLoading(true);
 
-  
-const handlePasswordSubmit = async (e) => {
-  e.preventDefault()
+      await axiosInstance.put("/shared/profile/password", {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      });
 
-  if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-    toast.error('New passwords do not match')
-    return
-  }
-
-  try {
-    setLoading(true)
-
-    await axiosInstance.put('/shared/profile/password', {
-      currentPassword: passwordForm.currentPassword,
-      newPassword: passwordForm.newPassword
-    })
-
-    toast.success('Password updated successfully')
-    setShowPasswordModal(false)
-    setPasswordForm({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    })
-  } catch (error) {
-    console.error('Error updating password:', error)
-    toast.error('Failed to update password')
-  } finally {
-    setLoading(false)
-  }
-}
+      toast.success("Password updated successfully");
+      setShowPasswordModal(false);
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (err) {
+      console.error("Password update failed:", err);
+      toast.error("Failed to update password");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   
   return (

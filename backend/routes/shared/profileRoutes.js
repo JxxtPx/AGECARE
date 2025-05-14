@@ -8,6 +8,8 @@ const upload = multer({ dest: "uploads/" });
 
 
 router.put("/", protect, asyncHandler(updateProfile));
+router.put("/", protect, asyncHandler(updateProfile));
+
 router.put("/password", protect, asyncHandler(changePassword));
 router.post("/photo", protect, upload.single("image"), asyncHandler(uploadUserProfilePhoto));
 

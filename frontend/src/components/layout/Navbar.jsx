@@ -1,4 +1,4 @@
-import React, { useState, useContext, useRef, useEffect } from "react";
+import React, { useState, useContext, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { FiBell, FiUser, FiLogOut, FiChevronDown } from "react-icons/fi";
@@ -16,10 +16,7 @@ const Navbar = () => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setShowUserMenu(false);
       }
-      if (
-        notificationsRef.current &&
-        !notificationsRef.current.contains(event.target)
-      ) {
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
         setShowNotifications(false);
       }
     };
@@ -29,6 +26,7 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => {
+    // Mock notifications — can be replaced with API later
     setNotifications([
       {
         id: 1,
@@ -44,25 +42,14 @@ const Navbar = () => {
         time: "3 hours ago",
         read: true,
       },
-      {
-        id: 3,
-        title: "New Message",
-        message: "You received a new message from Dr. Smith",
-        time: "Yesterday",
-        read: true,
-      },
     ]);
   }, []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const handleNotificationClick = (notificationId) => {
+  const handleNotificationClick = (id) => {
     setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.id === notificationId
-          ? { ...notification, read: true }
-          : notification
-      )
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
     setShowNotifications(false);
   };
@@ -73,9 +60,7 @@ const Navbar = () => {
     <header className="bg-white border-b border-gray-200 z-30">
       <div className="h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         <div className="flex items-center ml-12 md:ml-0">
-          <h1 className="text-2xl font-display font-bold text-primary-600">
-            iHealth
-          </h1>
+          <h1 className="text-2xl font-display font-bold text-primary-600">iHealth</h1>
         </div>
 
         <div className="flex items-center space-x-4">
@@ -97,31 +82,23 @@ const Navbar = () => {
             {showNotifications && (
               <div className="absolute right-0 mt-3 w-80 bg-white rounded-lg shadow-xl overflow-hidden z-20">
                 <div className="p-3 bg-gray-50 border-b border-gray-200">
-                  <h3 className="text-sm font-semibold text-gray-900">
-                    Notifications
-                  </h3>
+                  <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
                 </div>
 
                 <div className="max-h-96 overflow-y-auto">
-                  {notifications.map((notification) => (
+                  {notifications.map((n) => (
                     <div
-                      key={notification.id}
+                      key={n.id}
                       className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-                        !notification.read ? "bg-blue-50" : ""
+                        !n.read ? "bg-blue-50" : ""
                       }`}
-                      onClick={() => handleNotificationClick(notification.id)}
+                      onClick={() => handleNotificationClick(n.id)}
                     >
                       <div className="flex justify-between items-start">
-                        <h4 className="text-sm font-medium text-gray-900">
-                          {notification.title}
-                        </h4>
-                        <span className="text-xs text-gray-500">
-                          {notification.time}
-                        </span>
+                        <h4 className="text-sm font-medium text-gray-900">{n.title}</h4>
+                        <span className="text-xs text-gray-500">{n.time}</span>
                       </div>
-                      <p className="mt-1 text-sm text-gray-600">
-                        {notification.message}
-                      </p>
+                      <p className="mt-1 text-sm text-gray-600">{n.message}</p>
                     </div>
                   ))}
                 </div>
@@ -129,7 +106,7 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* User Menu */}
+          {/* User Dropdown */}
           <div className="relative" ref={userMenuRef}>
             <button
               className="flex items-center space-x-3 text-gray-700 hover:text-primary-600 transition-colors focus:outline-none"
@@ -148,9 +125,7 @@ const Navbar = () => {
               )}
 
               <div className="hidden md:block text-left">
-                <p className="text-sm font-medium text-gray-900">
-                  {user?.name}
-                </p>
+                <p className="text-sm font-medium text-gray-900">{user?.name}</p>
                 <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
               </div>
               <FiChevronDown className="hidden md:block w-4 h-4" />
@@ -169,8 +144,8 @@ const Navbar = () => {
                   </Link>
 
                   <button
-                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                     onClick={logout}
+                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                   >
                     <FiLogOut className="mr-3 w-4 h-4 text-gray-400" />
                     Sign out

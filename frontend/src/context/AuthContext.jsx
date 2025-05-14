@@ -10,69 +10,55 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-
   const navigate = useNavigate();
 
-  // Check if user is already logged in (from localStorage)
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      const storedUser = localStorage.getItem("user");
+  // Fetch user from API using stored token
+  const fetchUserProfile = async () => {
+    try {
       const token = localStorage.getItem("token");
 
-      if (storedUser && token) {
-        try {
-          setUser(JSON.parse(storedUser));
-          setIsAuthenticated(true);
-          axiosInstance.defaults.headers.common[
-            "Authorization"
-          ] = `Bearer ${token}`;
-        } catch {
-          localStorage.clear();
-        }
+      if (!token) {
+        throw new Error("No token found");
       }
 
-      setIsLoading(false); // ✅ only after check
-    };
+      axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      const res = await axiosInstance.get("/auth/me");
+      setUser(res.data);
+      setIsAuthenticated(true);
+    } catch (err) {
+      console.error("Auto-login failed:", err);
+      logout(); // Clear token and state
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    checkAuthStatus();
+  // On app load: check for token and fetch user
+  useEffect(() => {
+    fetchUserProfile();
   }, []);
 
-  // Real login
-const login = async (email, password) => {
-  try {
-    const res = await axiosInstance.post("/auth/login", { email, password });
-    const { token, user: userData } = res.data;
+  // Login: store token and fetch profile
+  const login = async (email, password) => {
+    try {
+      const res = await axiosInstance.post("/auth/login", { email, password });
+      const { token } = res.data;
 
-    // Store full user info including profilePicture in localStorage
-    const fullUserData = {
-      id: userData.id,
-      name: userData.name,
-      email: userData.email,
-      role: userData.role,
-      profilePicture: userData.profilePicture || null,
-    };
+      localStorage.setItem("token", token);
+      axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-    localStorage.setItem("user", JSON.stringify(fullUserData));
-    localStorage.setItem("token", token);
-
-    axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-    setUser(fullUserData);
-    setIsAuthenticated(true);
-
-    toast.success(`Welcome, ${userData.name || "User"}!`);
-    return { success: true, role: userData.role };
-  } catch (error) {
-    console.error("Login failed:", error);
-    const msg = error.response?.data?.message || "Login failed. Please try again.";
-    toast.error(msg);
-    return { success: false, message: msg };
-  }
-};
-
+      await fetchUserProfile();
+      toast.success(`Welcome back!`);
+      return { success: true, role: res.data.user.role };
+    } catch (error) {
+      console.error("Login failed:", error);
+      const msg = error.response?.data?.message || "Login failed. Please try again.";
+      toast.error(msg);
+      return { success: false, message: msg };
+    }
+  };
 
   const logout = () => {
-    localStorage.removeItem("user");
     localStorage.removeItem("token");
     axiosInstance.defaults.headers.common["Authorization"] = "";
     setUser(null);
@@ -102,6 +88,7 @@ const login = async (email, password) => {
     <AuthContext.Provider
       value={{
         user,
+        setUser,
         isAuthenticated,
         isLoading,
         login,

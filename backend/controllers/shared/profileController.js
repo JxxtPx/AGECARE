@@ -44,3 +44,29 @@ exports.changePassword = async (req, res) => {
 
   res.json({ message: "Password updated successfully" });
 };
+
+
+// Update profile (name, phone, profilePicture)
+exports.updateProfile = async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  const { name, phone, profilePicture } = req.body;
+
+  // Optional validation
+  if (!name || !name.trim()) {
+    res.status(400);
+    throw new Error("Name is required");
+  }
+
+  user.name = name.trim();
+  user.phone = phone?.trim() || '';
+  if (profilePicture) user.profilePicture = profilePicture;
+
+  await user.save();
+
+  res.status(200).json({ message: "Profile updated", user });
+};
