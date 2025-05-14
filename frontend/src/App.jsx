@@ -1,6 +1,7 @@
 import React, { useContext, Suspense, lazy, useEffect } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { AuthContext } from "./context/AuthContext";
+import { Analytics } from "@vercel/analytics/react";
 
 // Layout Components
 import Navbar from "./components/layout/Navbar";
@@ -85,7 +86,6 @@ const FamilyViewShiftNotes = lazy(() =>
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, isAuthenticated } = useContext(AuthContext);
 
-
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (allowedRoles && !allowedRoles.includes(user.role))
     return <Navigate to="/unauthorized" replace />;
@@ -138,351 +138,354 @@ function App() {
   };
 
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
-      <Route path="/set-password" element={<SetPassword />} />
+    <>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/set-password" element={<SetPassword />} />
 
-      {/* Admin Routes */}
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <AdminDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/users"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <ManageUsers />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/residents"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <ManageResidents />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/shifts"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <ManageShifts />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/feedbacks"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <ManageFeedbacks />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/visit-requests"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <ManageVisitRequests />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/incidents"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <ManageIncidents />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/messages"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <AdminMessages />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/settings"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <AdminSettings />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/profile"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <AdminProfile />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/family-requests"
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <ManageFamilyRequests />
-          </ProtectedRoute>
-        }
-      />
+        {/* Admin Routes */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <ManageUsers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/residents"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <ManageResidents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/shifts"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <ManageShifts />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/feedbacks"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <ManageFeedbacks />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/visit-requests"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <ManageVisitRequests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/incidents"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <ManageIncidents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/messages"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminMessages />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/settings"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/profile"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/family-requests"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <ManageFamilyRequests />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Coordinator Routes */}
-      <Route
-        path="/coordinator"
-        element={
-          <ProtectedRoute allowedRoles={["coordinator"]}>
-            <CoordinatorDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/coordinator/care-plans"
-        element={
-          <ProtectedRoute allowedRoles={["coordinator"]}>
-            <ManageCarePlans />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/coordinator/tasks"
-        element={
-          <ProtectedRoute allowedRoles={["coordinator"]}>
-            <ManageTasks />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/coordinator/flag-notes"
-        element={
-          <ProtectedRoute allowedRoles={["coordinator"]}>
-            <FlagShiftNotes />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/coordinator/messages"
-        element={
-          <ProtectedRoute allowedRoles={["coordinator"]}>
-            <CoordinatorMessages />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/coordinator/profile"
-        element={
-          <ProtectedRoute allowedRoles={["coordinator"]}>
-            <CoordinatorProfile />
-          </ProtectedRoute>
-        }
-      />
+        {/* Coordinator Routes */}
+        <Route
+          path="/coordinator"
+          element={
+            <ProtectedRoute allowedRoles={["coordinator"]}>
+              <CoordinatorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/coordinator/care-plans"
+          element={
+            <ProtectedRoute allowedRoles={["coordinator"]}>
+              <ManageCarePlans />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/coordinator/tasks"
+          element={
+            <ProtectedRoute allowedRoles={["coordinator"]}>
+              <ManageTasks />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/coordinator/flag-notes"
+          element={
+            <ProtectedRoute allowedRoles={["coordinator"]}>
+              <FlagShiftNotes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/coordinator/messages"
+          element={
+            <ProtectedRoute allowedRoles={["coordinator"]}>
+              <CoordinatorMessages />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/coordinator/profile"
+          element={
+            <ProtectedRoute allowedRoles={["coordinator"]}>
+              <CoordinatorProfile />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Nurse Routes */}
-      <Route
-        path="/nurse"
-        element={
-          <ProtectedRoute allowedRoles={["nurse"]}>
-            <NurseDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/nurse/shifts"
-        element={
-          <ProtectedRoute allowedRoles={["nurse"]}>
-            <NurseMyShifts />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/nurse/shift-notes"
-        element={
-          <ProtectedRoute allowedRoles={["nurse"]}>
-            <NurseMyShiftNotes />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/nurse/residents"
-        element={
-          <ProtectedRoute allowedRoles={["nurse"]}>
-            <NurseViewResidents />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/nurse/incidents"
-        element={
-          <ProtectedRoute allowedRoles={["nurse"]}>
-            <NurseReportIncidents />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/nurse/profile"
-        element={
-          <ProtectedRoute allowedRoles={["nurse"]}>
-            <NurseProfile />
-          </ProtectedRoute>
-        }
-      />
+        {/* Nurse Routes */}
+        <Route
+          path="/nurse"
+          element={
+            <ProtectedRoute allowedRoles={["nurse"]}>
+              <NurseDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nurse/shifts"
+          element={
+            <ProtectedRoute allowedRoles={["nurse"]}>
+              <NurseMyShifts />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nurse/shift-notes"
+          element={
+            <ProtectedRoute allowedRoles={["nurse"]}>
+              <NurseMyShiftNotes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nurse/residents"
+          element={
+            <ProtectedRoute allowedRoles={["nurse"]}>
+              <NurseViewResidents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nurse/incidents"
+          element={
+            <ProtectedRoute allowedRoles={["nurse"]}>
+              <NurseReportIncidents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nurse/profile"
+          element={
+            <ProtectedRoute allowedRoles={["nurse"]}>
+              <NurseProfile />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Carer Routes */}
-      <Route
-        path="/carer"
-        element={
-          <ProtectedRoute allowedRoles={["carer"]}>
-            <CarerDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/carer/shifts"
-        element={
-          <ProtectedRoute allowedRoles={["carer"]}>
-            <CarerMyShifts />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/carer/shift-notes"
-        element={
-          <ProtectedRoute allowedRoles={["carer"]}>
-            <CarerMyShiftNotes />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/carer/residents"
-        element={
-          <ProtectedRoute allowedRoles={["carer"]}>
-            <CarerViewResidents />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/carer/incidents"
-        element={
-          <ProtectedRoute allowedRoles={["carer"]}>
-            <CarerReportIncidents />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/carer/profile"
-        element={
-          <ProtectedRoute allowedRoles={["carer"]}>
-            <CarerProfile />
-          </ProtectedRoute>
-        }
-      />
+        {/* Carer Routes */}
+        <Route
+          path="/carer"
+          element={
+            <ProtectedRoute allowedRoles={["carer"]}>
+              <CarerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/carer/shifts"
+          element={
+            <ProtectedRoute allowedRoles={["carer"]}>
+              <CarerMyShifts />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/carer/shift-notes"
+          element={
+            <ProtectedRoute allowedRoles={["carer"]}>
+              <CarerMyShiftNotes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/carer/residents"
+          element={
+            <ProtectedRoute allowedRoles={["carer"]}>
+              <CarerViewResidents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/carer/incidents"
+          element={
+            <ProtectedRoute allowedRoles={["carer"]}>
+              <CarerReportIncidents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/carer/profile"
+          element={
+            <ProtectedRoute allowedRoles={["carer"]}>
+              <CarerProfile />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Resident Routes */}
-      <Route
-        path="/resident"
-        element={
-          <ProtectedRoute allowedRoles={["resident"]}>
-            <ResidentDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/resident/care-plan"
-        element={
-          <ProtectedRoute allowedRoles={["resident"]}>
-            <ViewCarePlan />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/resident/shift-notes"
-        element={
-          <ProtectedRoute allowedRoles={["resident"]}>
-            <ResidentViewShiftNotes />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/resident/feedback"
-        element={
-          <ProtectedRoute allowedRoles={["resident"]}>
-            <SubmitFeedback />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/resident/incident"
-        element={
-          <ProtectedRoute allowedRoles={["resident"]}>
-            <ResidentReportIncident />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/resident/profile"
-        element={
-          <ProtectedRoute allowedRoles={["resident"]}>
-            <ResidentProfile />
-          </ProtectedRoute>
-        }
-      />
+        {/* Resident Routes */}
+        <Route
+          path="/resident"
+          element={
+            <ProtectedRoute allowedRoles={["resident"]}>
+              <ResidentDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/resident/care-plan"
+          element={
+            <ProtectedRoute allowedRoles={["resident"]}>
+              <ViewCarePlan />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/resident/shift-notes"
+          element={
+            <ProtectedRoute allowedRoles={["resident"]}>
+              <ResidentViewShiftNotes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/resident/feedback"
+          element={
+            <ProtectedRoute allowedRoles={["resident"]}>
+              <SubmitFeedback />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/resident/incident"
+          element={
+            <ProtectedRoute allowedRoles={["resident"]}>
+              <ResidentReportIncident />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/resident/profile"
+          element={
+            <ProtectedRoute allowedRoles={["resident"]}>
+              <ResidentProfile />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Family Routes */}
-      <Route
-        path="/family"
-        element={
-          <ProtectedRoute allowedRoles={["family"]}>
-            <FamilyDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/family/resident"
-        element={
-          <ProtectedRoute allowedRoles={["family"]}>
-            <ViewResidentProfile />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/family/visits"
-        element={
-          <ProtectedRoute allowedRoles={["family"]}>
-            <VisitRequests />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/family/shift-notes"
-        element={
-          <ProtectedRoute allowedRoles={["family"]}>
-            <FamilyViewShiftNotes />
-          </ProtectedRoute>
-        }
-      />
+        {/* Family Routes */}
+        <Route
+          path="/family"
+          element={
+            <ProtectedRoute allowedRoles={["family"]}>
+              <FamilyDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/family/resident"
+          element={
+            <ProtectedRoute allowedRoles={["family"]}>
+              <ViewResidentProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/family/visits"
+          element={
+            <ProtectedRoute allowedRoles={["family"]}>
+              <VisitRequests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/family/shift-notes"
+          element={
+            <ProtectedRoute allowedRoles={["family"]}>
+              <FamilyViewShiftNotes />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Redirect based on role */}
-      <Route
-        path="/"
-        element={
-          isAuthenticated ? (
-            <Navigate to={getRedirectPath()} replace />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
+        {/* Redirect based on role */}
+        <Route
+          path="/"
+          element={
+            isAuthenticated ? (
+              <Navigate to={getRedirectPath()} replace />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
 
-      {/* 404 - Not Found */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+        {/* 404 - Not Found */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <Analytics />
+    </>
   );
 }
 
