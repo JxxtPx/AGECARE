@@ -1,5 +1,6 @@
 const Family = require("../../models/Family");
 const Resident = require("../../models/Resident");
+const User=require("../../models/User")
 
 exports.getPendingFamilyRequests = async (req, res) => {
   const pending = await Family.find({ status: "pending" }).populate(
@@ -29,3 +30,19 @@ exports.approveFamily = async (req, res) => {
 
   res.json({ message: "Family request approved", family });
 };
+
+exports.rejectFamily = async (req, res) => {
+  const { familyId } = req.params;
+
+  const family = await Family.findById(familyId);
+  if (!family) {
+    throw createError(404, "Family record not found");
+  }
+
+  await User.findByIdAndDelete(family.user);
+  await Family.findByIdAndDelete(familyId);
+
+  res.json({ message: "Family request permanently rejected and removed" });
+};
+
+

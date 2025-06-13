@@ -6,12 +6,18 @@ import {
   FiUpload,
   FiTrash2,
   FiX,
+  FiEdit,
 } from "react-icons/fi";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import ResidentCard from "../../components/common/ResidentCard";
 import { toast } from "react-toastify";
 import axiosInstance from "../../api/axiosInstance";
 const bodyParts = ["Head", "Chest", "Abdomen", "Arms", "Legs", "Skin"];
+import ResidentCareFormPreview from "../../components/common/ResidentCareFormPreview"; // adjust path if different
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+
+
 
 const ManageResidents = () => {
   const [loading, setLoading] = useState(true);
@@ -29,6 +35,30 @@ const ManageResidents = () => {
   const [isUploadingFile, setIsUploadingFile] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [noteCategories, setNoteCategories] = useState([]);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [categoryForm, setCategoryForm] = useState({ name: "", rolesAllowed: ["admin"], _id: null });
+  const [showDeleteCategoryConfirm, setShowDeleteCategoryConfirm] = useState({ show: false, id: null });
+
+  const [residentNotes, setResidentNotes] = useState([]);
+  const [activeNoteTab, setActiveNoteTab] = useState(null);
+
+
+  const [openNoteIndex, setOpenNoteIndex] = useState(null);
+
+  const [selectedFormForPreview, setSelectedFormForPreview] = useState(null);
+
+
+  const [showFormDeleteModal, setShowFormDeleteModal] = useState(false);
+  const [formToDelete, setFormToDelete] = useState(null);
+
+
+
+
+
+
+
+
 
   const [fileForm, setFileForm] = useState({
     file: null,
@@ -72,6 +102,12 @@ const ManageResidents = () => {
     };
     fetchUsers();
   }, []);
+  useEffect(() => {
+    if (activeTab === "notes" && selectedResident?._id) {
+      fetchResidentNotes(selectedResident._id);
+    }
+  }, [activeTab, selectedResident]);
+
 
   useEffect(() => {
     const fetchResidents = async () => {
@@ -140,6 +176,7 @@ const ManageResidents = () => {
     setActiveTab("details");
     setShowModal(true);
     await fetchResidentFiles(resident._id);
+    await fetchNoteCategories(resident._id);
   };
 
   const handleSubmit = async (e) => {
@@ -344,8 +381,32 @@ const ManageResidents = () => {
       toast.error("Failed to load resident files");
     }
   };
+  const fetchNoteCategories = async (residentId = selectedResident?._id) => {
+    if (!residentId) return;
+    try {
+      const res = await axiosInstance.get(`/shared/notecategories/resident/${residentId}`);
 
-const filteredResidents = (residents || []).filter((resident) => {
+      setNoteCategories(res.data);
+    } catch (err) {
+      toast.error("Failed to load note categories");
+    }
+  };
+  const fetchResidentNotes = async () => {
+    try {
+      const res = await axiosInstance.get(`/admin/shiftnotes/${selectedResident?._id}`);
+      setResidentNotes(res.data || []);
+      console.log("Fetched notes:", residentNotes);
+
+    } catch (error) {
+      console.error("Failed to load notes", error);
+      setResidentNotes([]);
+    }
+  };
+
+
+
+
+  const filteredResidents = (residents || []).filter((resident) => {
 
     const fullName = resident.fullName?.toLowerCase() || "";
     const phone = resident.contactInfo?.phone || "";
@@ -359,6 +420,108 @@ const filteredResidents = (residents || []).filter((resident) => {
 
     return matchesSearch && matchesFilter;
   });
+
+
+  const [carePlans, setCarePlans] = useState([])
+  const [showCarePlanForm, setShowCarePlanForm] = useState(false)
+  const [carePlanTitle, setCarePlanTitle] = useState('')
+  const [carePlanDetails, setCarePlanDetails] = useState('')
+  const [expandedPlan, setExpandedPlan] = useState(null);
+
+  
+  useEffect(() => {
+    if (activeTab === 'medical') fetchCarePlans();
+  }, [activeTab]);
+
+  const fetchCarePlans = async () => {
+    try {
+      const res = await axiosInstance.get(`/shared/careplans/resident/${selectedResident._id}`);
+      setCarePlans(res.data);
+    } catch (err) {
+      console.error('Error fetching care plans', err);
+    }
+  };
+
+  const handleCreateCarePlan = async () => {
+    try {
+      await axiosInstance.post('/admin/careplans', {
+        resident: selectedResident._id,
+        entries: [{ title: carePlanTitle, details: carePlanDetails }],
+      });
+      // setShowCarePlanModal(false);
+      setCarePlanTitle('');
+      setCarePlanDetails('');
+      fetchCarePlans(); // refresh
+    } catch (err) {
+      console.error('Error creating care plan', err);
+    }
+  };
+
+
+  const [careForms, setCareForms] = useState([]);
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [careFormData, setCareFormData] = useState({
+    title: "",
+    description: "",
+    rolesAllowed: ["carer"],
+    questions: [],
+  });
+
+  // Submit new care form
+  const handleFormSubmit = async () => {
+    const payload = {
+      ...careFormData,
+      assignedResidents: [selectedResident._id],
+    };
+
+    try {
+      await axiosInstance.post("/admin/careforms/template", payload);
+      toast.success("Form created successfully");
+      setShowFormModal(false);
+      fetchCareForms(); // reload list
+    } catch (err) {
+      toast.error("Failed to create form");
+    }
+  };
+
+  // Fetch assigned care forms
+  const fetchCareForms = async () => {
+    try {
+      const res = await axiosInstance.get(`/admin/careforms/templates/${selectedResident._id}`)
+      setCareForms(res.data)
+    } catch (err) {
+      console.error("Error fetching forms:", err)
+      toast.error("Failed to load care forms")
+    }
+  }
+
+
+  // Watch for tab or resident change
+  useEffect(() => {
+    if (activeTab === "forms") fetchCareForms();
+  }, [activeTab, selectedResident]);
+
+
+  const confirmDeleteForm = async () => {
+    try {
+      await axiosInstance.delete(`/admin/careforms/template/${formToDelete._id}`);
+      toast.success("Form deleted");
+      console.log("Trying to delete form at URL:", `/admin/careforms/template/${formToDelete._id}`);
+
+      fetchCareForms(); // Refresh the form list
+    } catch (err) {
+      toast.error("Failed to delete form");
+      console.log("Trying to delete form at URL:", `/admin/careforms/template/${formToDelete._id}`);
+
+      console.error(err);
+    } finally {
+      setShowFormDeleteModal(false);
+      setFormToDelete(null);
+    }
+  };
+
+
+
 
   const renderFileUploadForm = () => (
     <div className="space-y-4">
@@ -429,11 +592,10 @@ const filteredResidents = (residents || []).filter((resident) => {
 
       <div
         className={`mt-1 border-2 border-dashed rounded-md p-4 text-center cursor-pointer transition
-    ${
-      fileForm.file
-        ? "border-green-400 bg-green-50"
-        : "border-gray-300 hover:border-rose-400"
-    }`}
+    ${fileForm.file
+            ? "border-green-400 bg-green-50"
+            : "border-gray-300 hover:border-rose-400"
+          }`}
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault();
@@ -661,34 +823,53 @@ const filteredResidents = (residents || []).filter((resident) => {
                       <nav className="-mb-px flex space-x-8">
                         <button
                           onClick={() => setActiveTab("details")}
-                          className={`pb-4 px-1 border-b-2 font-medium text-sm ${
-                            activeTab === "details"
-                              ? "border-primary-500 text-primary-600"
-                              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                          }`}
+                          className={`pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === "details"
+                            ? "border-primary-500 text-primary-600"
+                            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                            }`}
                         >
                           Details
                         </button>
                         <button
                           onClick={() => setActiveTab("medical")}
-                          className={`pb-4 px-1 border-b-2 font-medium text-sm ${
-                            activeTab === "medical"
-                              ? "border-primary-500 text-primary-600"
-                              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                          }`}
+                          className={`pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === "medical"
+                            ? "border-primary-500 text-primary-600"
+                            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                            }`}
                         >
                           Medical Info
                         </button>
                         <button
                           onClick={() => setActiveTab("files")}
-                          className={`pb-4 px-1 border-b-2 font-medium text-sm ${
-                            activeTab === "files"
-                              ? "border-primary-500 text-primary-600"
-                              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                          }`}
+                          className={`pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === "files"
+                            ? "border-primary-500 text-primary-600"
+                            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                            }`}
                         >
                           Files
                         </button>
+                        <button
+                          onClick={() => setActiveTab("notes")}
+                          className={`pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === "notes"
+                            ? "border-primary-500 text-primary-600"
+                            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                            }`}
+                        >
+                          Notes
+                        </button>
+                        <button
+                          onClick={() => setActiveTab("forms")}
+                          className={`pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === "forms"
+                            ? "border-primary-500 text-primary-600"
+                            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                            }`}
+                        >
+                          Forms
+                        </button>
+
+
+
+
                       </nav>
                     </div>
 
@@ -1052,10 +1233,10 @@ const filteredResidents = (residents || []).filter((resident) => {
 
                       {activeTab === "medical" && (
                         <div className="space-y-4">
+
+                          {/* === Medical History Section (existing) === */}
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                              Medical History
-                            </label>
+                            <label className="block text-sm font-medium text-gray-700">Medical History</label>
                             <textarea
                               className="form-input mt-1"
                               rows={4}
@@ -1070,10 +1251,9 @@ const filteredResidents = (residents || []).filter((resident) => {
                             />
                           </div>
 
+                          {/* === Body Parts Section (existing) === */}
                           <div>
-                            <h4 className="text-sm font-semibold mb-2">
-                              Body Part Conditions
-                            </h4>
+                            <h4 className="text-sm font-semibold mb-2">Body Part Conditions</h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               {bodyParts.map((part) => (
                                 <div key={part} className="border rounded p-3">
@@ -1081,12 +1261,7 @@ const filteredResidents = (residents || []).filter((resident) => {
                                     <input
                                       type="checkbox"
                                       checked={isChecked(part)}
-                                      onChange={(e) =>
-                                        handleCheckboxChange(
-                                          part,
-                                          e.target.checked
-                                        )
-                                      }
+                                      onChange={(e) => handleCheckboxChange(part, e.target.checked)}
                                     />
                                     <span>{part}</span>
                                   </label>
@@ -1096,22 +1271,623 @@ const filteredResidents = (residents || []).filter((resident) => {
                                       rows={2}
                                       placeholder={`Describe condition for ${part}`}
                                       value={getDescription(part)}
-                                      onChange={(e) =>
-                                        handleConditionChange(
-                                          part,
-                                          e.target.value
-                                        )
-                                      }
+                                      onChange={(e) => handleConditionChange(part, e.target.value)}
                                     />
                                   )}
                                 </div>
                               ))}
                             </div>
                           </div>
+
+                          {/* === Care Plan Section === */}
+                          <div className="space-y-3 mt-6">
+                            <div className="flex justify-between items-center">
+                              <h4 className="text-sm font-semibold">Care Plans</h4>
+                              <button
+                                className={`btn btn-sm ${showCarePlanForm ? 'bg-red-600 hover:bg-red-700 text-white' : 'btn-primary'}`}
+                                onClick={() => setShowCarePlanForm(!showCarePlanForm)}
+                              >
+                                {showCarePlanForm ? 'Cancel' : '+ Create Care Plan'}
+                              </button>
+                            </div>
+
+                            {showCarePlanForm && (
+                              <div className="bg-white p-4 border rounded shadow-sm space-y-4">
+                                <input
+                                  type="text"
+                                  className="form-input w-full"
+                                  placeholder="Title"
+                                  value={carePlanTitle}
+                                  onChange={(e) => setCarePlanTitle(e.target.value)}
+                                />
+
+                                <ReactQuill
+                                  theme="snow"
+                                  value={carePlanDetails}
+                                  onChange={setCarePlanDetails}
+                                  className="bg-white"
+                                  placeholder="Write care plan details..."
+                                />
+
+                                <div className="flex justify-end">
+                                  <button
+                                    className="btn btn-sm btn-primary"
+                                    onClick={handleCreateCarePlan}
+                                  >
+                                    Save Plan
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* === Existing Care Plans === */}
+                            {carePlans.map((plan, idx) => {
+  const isOpen = expandedPlan === idx;
+
+  return (
+    <div key={idx} className="bg-white shadow-sm border rounded">
+      {/* Header with title */}
+      <button
+        onClick={() => setExpandedPlan(isOpen ? null : idx)}
+        className="w-full text-left p-4 flex justify-between items-center"
+      >
+        <span className="font-semibold text-gray-800">{plan.entries[0]?.title || "Untitled Plan"}</span>
+        <svg
+          className={`w-4 h-4 transform transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {/* Expanded content */}
+      {isOpen && (
+        <div className="px-4 pb-4 space-y-3">
+          {plan.entries.map((entry, i) => (
+            <div key={i}>
+              <p className="text-sm font-medium text-gray-700">{entry.title}</p>
+              <div
+                className="text-sm text-gray-600 prose"
+                dangerouslySetInnerHTML={{ __html: entry.details }}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+})}
+
+                          </div>
+
                         </div>
                       )}
 
+
                       {activeTab === "files" && renderFileUploadForm()}
+                      {activeTab === "notes" && (
+                        <div className="space-y-6">
+                          {/* === Note Categories Section === */}
+                          <div className="flex justify-between items-center">
+                            <h4 className="text-base font-semibold text-gray-800">Note Categories</h4>
+                            <button
+                              onClick={() => {
+                                setCategoryForm({ name: "", rolesAllowed: ["admin"], _id: null });
+                                setShowCategoryModal(true);
+                              }}
+                              className="btn btn-sm btn-primary"
+                            >
+                              <FiPlus className="mr-1" /> Add Category
+                            </button>
+                          </div>
+
+                          {noteCategories.length > 0 ? (
+                            <ul className="space-y-2">
+                              {noteCategories.map((cat) => (
+                                <li
+                                  key={cat._id}
+                                  className="flex items-center justify-between p-3 border rounded-md bg-white shadow-sm"
+                                >
+                                  <span className="text-sm font-medium text-gray-800">{cat.name}</span>
+                                  <div className="space-x-2">
+                                    <button
+                                      className="text-blue-600 hover:text-blue-800"
+                                      onClick={() => {
+                                        setCategoryForm({
+                                          name: cat.name,
+                                          rolesAllowed: cat.rolesAllowed.includes("admin")
+                                            ? cat.rolesAllowed
+                                            : ["admin", ...cat.rolesAllowed],
+                                          _id: cat._id,
+                                        });
+                                        setShowCategoryModal(true);
+                                      }}
+                                    >
+                                      <FiEdit className="inline-block mr-1" />
+                                    </button>
+                                    <button
+                                      className="text-red-600 hover:text-red-800"
+                                      onClick={() =>
+                                        setShowDeleteCategoryConfirm({ show: true, id: cat._id })
+                                      }
+                                    >
+                                      <FiTrash2 className="inline-block mr-1" />
+                                    </button>
+                                  </div>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-sm text-gray-500">No categories defined.</p>
+                          )}
+
+                          {/* === Note Category Modal === */}
+                          {showCategoryModal && (
+                            <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center">
+                              <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+                                <h3 className="text-lg font-semibold mb-4">
+                                  {categoryForm._id ? "Edit Category" : "Add New Category"}
+                                </h3>
+                                <div className="space-y-4">
+                                  <input
+                                    type="text"
+                                    className="form-input w-full"
+                                    placeholder=" Category Name"
+                                    value={categoryForm.name}
+                                    onChange={(e) =>
+                                      setCategoryForm({ ...categoryForm, name: e.target.value })
+                                    }
+                                  />
+
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                                      Roles Allowed
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                      {["admin", "carer", "nurse", "resident", "family"].map((role) => (
+                                        <label
+                                          key={role}
+                                          className="flex items-center gap-2 text-sm text-gray-800"
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            checked={categoryForm.rolesAllowed.includes(role)}
+                                            disabled={role === "admin"}
+                                            onChange={(e) => {
+                                              const updatedRoles = e.target.checked
+                                                ? [...categoryForm.rolesAllowed, role]
+                                                : categoryForm.rolesAllowed.filter((r) => r !== role);
+                                              setCategoryForm({ ...categoryForm, rolesAllowed: updatedRoles });
+                                            }}
+                                          />
+                                          {role}
+                                        </label>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="mt-6 flex justify-end gap-3">
+                                  <button
+                                    className="btn btn-outline"
+                                    onClick={() => setShowCategoryModal(false)}
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    className="btn btn-primary"
+                                    onClick={() => {
+                                      const { _id, name, rolesAllowed } = categoryForm;
+                                      const payload = {
+                                        name: name.trim(),
+                                        rolesAllowed,
+                                        residentId: selectedResident?._id,
+                                      };
+                                      const req = _id
+                                        ? axiosInstance.put(`/admin/notecategories/${_id}`, payload)
+                                        : axiosInstance.post(`/admin/notecategories`, payload);
+                                      req
+                                        .then(() => {
+                                          toast.success(`Category ${_id ? "updated" : "created"}`);
+                                          fetchNoteCategories();
+                                          setShowCategoryModal(false);
+                                        })
+                                        .catch(() => toast.error("Failed to save category"));
+                                    }}
+                                  >
+                                    Save
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* === Note Delete Confirmation Modal === */}
+                          {showDeleteCategoryConfirm.show && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                              <div className="bg-white p-6 rounded shadow-lg w-full max-w-sm">
+                                <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                                  Confirm Delete
+                                </h4>
+                                <p className="text-sm text-gray-600 mb-4">
+                                  Are you sure you want to delete this note category?
+                                </p>
+                                <div className="flex justify-end gap-3">
+                                  <button
+                                    className="btn btn-outline"
+                                    onClick={() => setShowDeleteCategoryConfirm({ show: false, id: null })}
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    className="btn btn-danger"
+                                    onClick={() => {
+                                      axiosInstance
+                                        .delete(`/admin/notecategories/${showDeleteCategoryConfirm.id}`)
+                                        .then(() => {
+                                          toast.success("Deleted");
+                                          fetchNoteCategories();
+                                          setShowDeleteCategoryConfirm({ show: false, id: null });
+                                        })
+                                        .catch(() => toast.error("Failed to delete"));
+                                    }}
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* === Resident Notes by Category Tabs === */}
+                          {residentNotes.length > 0 && (
+                            <div className="mt-10">
+                              <h4 className="text-base font-semibold text-gray-800 mb-2">Resident Notes</h4>
+
+                              {/* Category Tabs */}
+                              <div className="flex flex-wrap gap-2 mb-4">
+                                {[...new Set(residentNotes.map(note => note.category || "Uncategorized"))].map((cat) => (
+                                  <button
+                                    key={cat}
+                                    onClick={() => setActiveNoteTab(cat)}
+                                    className={`px-3 py-1 rounded-full border text-sm ${activeNoteTab === cat
+                                      ? "bg-primary text-white"
+                                      : "bg-white text-gray-700 border-gray-300"
+                                      }`}
+                                  >
+                                    {cat}
+                                  </button>
+                                ))}
+                              </div>
+
+                              {/* Notes List with Dropdown Behavior */}
+                              <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                                {residentNotes
+                                  .filter((note) => !activeNoteTab || note.category === activeNoteTab)
+                                  .map((note, idx) => {
+                                    const isOpen = openNoteIndex === idx;
+
+                                    return (
+                                      <div
+                                        key={idx}
+                                        className="p-3 border rounded-md bg-gray-50 shadow-sm text-sm"
+                                      >
+                                        <div
+                                          onClick={() =>
+                                            setOpenNoteIndex(openNoteIndex === idx ? null : idx)
+                                          }
+                                          className="flex justify-between mb-1 text-xs text-gray-500 cursor-pointer"
+                                        >
+                                          <span>{new Date(note.createdAt).toLocaleString()}</span>
+                                          <span>{note?.user?.name || "Unknown"} ({note?.user?.role})</span>
+                                        </div>
+
+                                        {isOpen && (
+                                          <>
+                                            <p className="text-gray-800 mt-1">{note.note}</p>
+                                            {note.isFlagged && (
+                                              <p className="text-sm text-red-600 mt-1">
+                                                ⚠️ <strong>Flagged:</strong> {note.flagComment || "No comment provided"}
+                                              </p>
+                                            )}
+                                          </>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                              </div>
+                            </div>
+                          )}
+
+                        </div>
+                      )}
+                      {activeTab === "forms" && selectedResident && (
+                        <div className="space-y-6">
+                          <div className="flex justify-between items-center">
+                            <h4 className="text-base font-semibold text-gray-800">Care Forms</h4>
+                            <button
+                              onClick={() => setShowFormModal(!showFormModal)}
+                              className={`btn btn-sm ${showFormModal ? 'bg-red-600 hover:bg-red-700 text-white' : 'btn-primary'}`}
+                            >
+                              {showFormModal ? (
+                                <>
+                                  <span className="mr-1 text-white">✕</span> Cancel
+                                </>
+                              ) : (
+                                <>
+                                  <FiPlus className="mr-1" /> Create Form
+                                </>
+                              )}
+                            </button>
+
+                          </div>
+                          {showFormModal && (
+                            <div className="bg-white p-6 rounded-lg shadow-lg border">
+                              <h3 className="text-lg font-semibold mb-4">Create New Care Form</h3>
+                              <div className="space-y-4">
+                                <input
+                                  type="text"
+                                  className="form-input w-full"
+                                  placeholder="Form Title"
+                                  value={careFormData.title}
+                                  onChange={(e) => setCareFormData({ ...careFormData, title: e.target.value })}
+                                />
+                                <textarea
+                                  className="form-input w-full"
+                                  placeholder="Form Description"
+                                  value={careFormData.description}
+                                  onChange={(e) => setCareFormData({ ...careFormData, description: e.target.value })}
+                                />
+
+                                <div>
+                                  <label className="text-sm font-medium text-gray-700 mb-2 block">Roles Allowed</label>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {["admin", "carer", "nurse"].map((role) => (
+                                      <label
+                                        key={role}
+                                        className="flex items-center gap-2 text-sm text-gray-800"
+                                      >
+                                        <input
+                                          type="checkbox"
+                                          checked={careFormData.rolesAllowed.includes(role)}
+                                          onChange={(e) => {
+                                            const updatedRoles = e.target.checked
+                                              ? [...careFormData.rolesAllowed, role]
+                                              : careFormData.rolesAllowed.filter((r) => r !== role);
+                                            setCareFormData({ ...careFormData, rolesAllowed: updatedRoles });
+                                          }}
+                                        />
+                                        {role}
+                                      </label>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                  <label className="block text-sm font-medium">Questions</label>
+                                  {careFormData.questions.map((q, index) => (
+                                    <div key={index} className="border p-3 rounded-md bg-gray-50 space-y-2">
+                                      <input
+                                        type="text"
+                                        className="form-input w-full"
+                                        placeholder="Question Text"
+                                        value={q.questionText}
+                                        onChange={(e) => {
+                                          const updated = [...careFormData.questions];
+                                          updated[index].questionText = e.target.value;
+                                          setCareFormData({ ...careFormData, questions: updated });
+                                        }}
+                                      />
+
+                                      <select
+                                        className="form-input w-full"
+                                        value={q.type}
+                                        onChange={(e) => {
+                                          const updated = [...careFormData.questions];
+                                          updated[index].type = e.target.value;
+                                          if (["radio", "checkbox", "select"].includes(e.target.value)) {
+                                            updated[index].options = [""];
+                                          } else {
+                                            delete updated[index].options;
+                                          }
+                                          setCareFormData({ ...careFormData, questions: updated });
+                                        }}
+                                      >
+                                        <option value="text">Text</option>
+                                        <option value="textarea">Textarea</option>
+                                        <option value="radio">Radio</option>
+                                        <option value="checkbox">Checkbox</option>
+                                        <option value="select">Select</option>
+                                      </select>
+
+                                      {["radio", "checkbox", "select"].includes(q.type) && (
+                                        <div className="space-y-1">
+                                          {q.options.map((opt, optIndex) => (
+                                            <div key={optIndex} className="flex gap-2 items-center">
+                                              <input
+                                                type="text"
+                                                placeholder={`Option ${optIndex + 1}`}
+                                                className="form-input flex-1"
+                                                value={opt}
+                                                onChange={(e) => {
+                                                  const updated = [...careFormData.questions];
+                                                  updated[index].options[optIndex] = e.target.value;
+                                                  setCareFormData({ ...careFormData, questions: updated });
+                                                }}
+                                              />
+                                              <button
+                                                className="text-red-600"
+                                                onClick={() => {
+                                                  const updated = [...careFormData.questions];
+                                                  updated[index].options.splice(optIndex, 1);
+                                                  setCareFormData({ ...careFormData, questions: updated });
+                                                }}
+                                              >
+                                                ✕
+                                              </button>
+                                            </div>
+                                          ))}
+                                          <button
+                                            className="text-primary-600 text-sm"
+                                            onClick={() => {
+                                              const updated = [...careFormData.questions];
+                                              updated[index].options.push("");
+                                              setCareFormData({ ...careFormData, questions: updated });
+                                            }}
+                                          >
+                                            + Add Option
+                                          </button>
+                                        </div>
+                                      )}
+
+                                      <textarea
+                                        className="form-input w-full"
+                                        placeholder="Answer (optional)"
+                                        value={q.answerText || ""}
+                                        onChange={(e) => {
+                                          const updated = [...careFormData.questions];
+                                          updated[index].answerText = e.target.value;
+                                          setCareFormData({ ...careFormData, questions: updated });
+                                        }}
+                                      />
+
+                                      <label className="flex items-center gap-2 text-sm">
+                                        <input
+                                          type="checkbox"
+                                          checked={q.isRequired}
+                                          onChange={(e) => {
+                                            const updated = [...careFormData.questions];
+                                            updated[index].isRequired = e.target.checked;
+                                            setCareFormData({ ...careFormData, questions: updated });
+                                          }}
+                                        />
+                                        Required
+                                      </label>
+                                    </div>
+                                  ))}
+                                  <button
+                                    className="text-primary-600 text-sm"
+                                    onClick={() =>
+                                      setCareFormData({
+                                        ...careFormData,
+                                        questions: [
+                                          ...careFormData.questions,
+                                          { questionText: "", type: "text", isRequired: false, options: [], answerText: "" },
+                                        ],
+                                      })
+                                    }
+                                  >
+                                    + Add Question
+                                  </button>
+                                </div>
+
+                                <div className="flex justify-end">
+                                  <button
+                                    className="btn btn-primary"
+                                    onClick={handleFormSubmit}
+                                  >
+                                    Save Form
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {careForms.length > 0 ? (
+                            <ul className="space-y-4">
+                              {careForms.map((form) => (
+                                <li
+                                  key={form._id}
+                                  className="flex flex-col p-3 border rounded-md bg-white shadow-sm relative"
+                                >
+                                  <span className="text-sm font-medium text-gray-800">{form.title}</span>
+                                  <span className="text-xs text-gray-600">{form.description}</span>
+                                  <span className="text-xs text-gray-500 mt-1">
+                                    Allowed Roles: {form.rolesAllowed.join(", ")}
+                                  </span>
+
+                                  <div className="flex gap-3 mt-2">
+                                    <button
+                                      className="btn btn-sm btn-outline"
+                                      onClick={() => setSelectedFormForPreview(form)}
+                                    >
+                                      View
+                                    </button>
+
+                                    <button
+                                      className="btn btn-sm text-red-600 flex items-center gap-1"
+                                      onClick={() => {
+                                        setFormToDelete(form);
+                                        setShowFormDeleteModal(true);
+                                      }}
+                                    >
+                                      <FiTrash2 className="text-sm" />
+                                      Delete
+                                    </button>
+                                  </div>
+
+                                </li>
+                              ))}
+
+
+                            </ul>
+
+
+                          ) : (
+                            <p className="text-sm text-gray-500">No care forms assigned to this resident.</p>
+                          )}
+
+
+                          {selectedFormForPreview && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                              <div className="relative w-full max-w-3xl bg-white p-6 rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
+                                <button
+                                  onClick={() => setSelectedFormForPreview(null)}
+                                  className="absolute top-3 right-3 text-gray-500 hover:text-red-600 text-xl"
+                                >
+                                  ✕
+                                </button>
+
+                                <div className="flex justify-between items-start mb-4">
+                                  <div>
+                                    <h2 className="text-xl font-semibold text-gray-800">{selectedFormForPreview.title}</h2>
+                                    <p className="text-sm text-gray-600">{selectedFormForPreview.description}</p>
+                                  </div>
+                                  {/* Placeholder for delete icon - functionality added later */}
+
+                                </div>
+
+                                <div className="space-y-5">
+                                  {selectedFormForPreview.questions.map((q, idx) => (
+                                    <div key={idx} className="border border-gray-200 rounded p-3 bg-gray-50">
+                                      <p className="text-sm font-medium text-gray-700 mb-1">
+                                        {idx + 1}. {q.questionText}
+                                      </p>
+                                      {q.type === "checkbox" && Array.isArray(q.answer) ? (
+                                        <ul className="list-disc list-inside text-sm text-gray-800">
+                                          {q.answer.map((ans, i) => (
+                                            <li key={i}>{ans}</li>
+                                          ))}
+                                        </ul>
+                                      ) : (
+                                        <p className="text-sm text-gray-800">➤ {q.answer || "—"}</p>
+                                      )}
+                                      <p className="text-xs text-gray-500 mt-1">Type: {q.type}</p>
+                                      {q.options?.length > 0 && (
+                                        <p className="text-xs text-gray-400 mt-1">
+                                          Options: {q.options.join(", ")}
+                                        </p>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1197,6 +1973,35 @@ const filteredResidents = (residents || []).filter((resident) => {
           </div>
         </div>
       )}
+      {showFormDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Confirm Delete
+            </h3>
+            <p className="text-sm text-gray-700 mb-6">
+              Are you sure you want to delete form{" "}
+              <span className="font-semibold">{formToDelete?.title}</span>? This
+              action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowFormDeleteModal(false)}
+                className="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteForm}
+                className="px-4 py-2 text-sm text-white bg-red-600 rounded hover:bg-red-700"
+              >
+                Confirm Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

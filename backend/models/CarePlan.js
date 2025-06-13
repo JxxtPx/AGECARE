@@ -6,26 +6,18 @@ const carePlanSchema = new mongoose.Schema({
     ref: "Resident",
     required: true
   },
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User", // Coordinator
-    required: true
-  },
-  goals: {
-    type: [String],
-    default: []
-  },
-  risks: {
-    type: [String],
-    default: []
-  },
-  notes: {
-    type: String,
-    default: ""
-  },
-  nextReviewDate: {
-    type: Date
-  }
+  entries: [
+    {
+      title: {
+        type: String,
+        required: true
+      },
+      details: {
+        type: String,
+        required: true
+      }
+    }
+  ]
 }, { timestamps: true });
 
 module.exports = mongoose.model("CarePlan", carePlanSchema);

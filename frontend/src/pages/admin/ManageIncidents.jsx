@@ -1,79 +1,90 @@
-import React, { useState, useEffect } from 'react'
-import { FiSearch, FiFilter, FiAlertCircle, FiX, FiEye, FiCheck } from 'react-icons/fi'
-import LoadingSpinner from '../../components/common/LoadingSpinner'
-import StatusBadge from '../../components/common/StatusBadge'
-import { toast } from 'react-toastify'
-import axiosInstance from '../../api/axiosInstance'
+import React, { useState, useEffect } from "react";
+import {
+  FiSearch,
+  FiFilter,
+  FiAlertCircle,
+  FiX,
+  FiEye,
+  FiCheck,
+} from "react-icons/fi";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
+import StatusBadge from "../../components/common/StatusBadge";
+import { toast } from "react-toastify";
+import axiosInstance from "../../api/axiosInstance";
 
 const ManageIncidents = () => {
-  const [loading, setLoading] = useState(true)
-  const [incidents, setIncidents] = useState([])
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filterStatus, setFilterStatus] = useState('all')
-  const [showModal, setShowModal] = useState(false)
-  const [selectedIncident, setSelectedIncident] = useState(null)
+  const [loading, setLoading] = useState(true);
+  const [incidents, setIncidents] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [showModal, setShowModal] = useState(false);
+  const [selectedIncident, setSelectedIncident] = useState(null);
   useEffect(() => {
     const fetchIncidents = async () => {
       try {
-        const { data } = await axiosInstance.get("/shared/incidents")
-        console.log("Fetched incidents", data)
-        setIncidents(data)
+        const { data } = await axiosInstance.get("/shared/incidents");
+        console.log("Fetched incidents", data);
+        setIncidents(data);
       } catch (error) {
-        console.error('Error fetching incidents:', error)
-        toast.error('Failed to load incidents')
+        console.error("Error fetching incidents:", error);
+        toast.error("Failed to load incidents");
       } finally {
-        setLoading(false)  // ✅ ensure loading state is updated regardless
+        setLoading(false); // ✅ ensure loading state is updated regardless
       }
-    }
-  
-    fetchIncidents()
-  }, [])
-  
+    };
+
+    fetchIncidents();
+  }, []);
 
   const handleViewIncident = (incident) => {
-    setSelectedIncident(incident)
-    setShowModal(true)
-  }
+    setSelectedIncident(incident);
+    setShowModal(true);
+  };
 
   const handleCloseIncident = async (incidentId) => {
     try {
-      await axiosInstance.put(`/shared/incidents/${incidentId}`)
+      await axiosInstance.put(`/shared/incidents/${incidentId}`);
 
-      setIncidents(incidents.map(incident =>
-        incident._id === incidentId
-          ? { ...incident, status: 'closed' }
-          : incident
-      ))
-      toast.success('Incident marked as closed')
+      setIncidents(
+        incidents.map((incident) =>
+          incident._id === incidentId
+            ? { ...incident, status: "closed" }
+            : incident
+        )
+      );
+      toast.success("Incident marked as closed");
     } catch (error) {
-      toast.error('Failed to update incident status')
+      toast.error("Failed to update incident status");
     }
-  }
+  };
 
-const filteredIncidents = incidents.filter(incident => {
-  const reportedByName = incident?.reportedBy?.name?.toLowerCase() || 'ReportedBy';
-  const residentName = incident?.resident?.fullName?.toLowerCase() || 'For';
-  const description = incident?.description?.toLowerCase() || 'Reason';
+  const filteredIncidents = incidents.filter((incident) => {
+    const reportedByName =
+      incident?.reportedBy?.name?.toLowerCase() || "ReportedBy";
+    const residentName = incident?.resident?.fullName?.toLowerCase() || "For";
+    const description = incident?.description?.toLowerCase() || "Reason";
 
-  const matchesSearch =
-    reportedByName.includes(searchTerm.toLowerCase()) ||
-    residentName.includes(searchTerm.toLowerCase()) ||
-    description.includes(searchTerm.toLowerCase());
+    const matchesSearch =
+      reportedByName.includes(searchTerm.toLowerCase()) ||
+      residentName.includes(searchTerm.toLowerCase()) ||
+      description.includes(searchTerm.toLowerCase());
 
-  const matchesFilter = filterStatus === 'all' || incident.status === filterStatus;
+    const matchesFilter =
+      filterStatus === "all" || incident.status === filterStatus;
 
-  return matchesSearch && matchesFilter;
-});
-
+    return matchesSearch && matchesFilter;
+  });
 
   if (loading) {
-    return <LoadingSpinner fullScreen />
+    return <LoadingSpinner fullScreen />;
   }
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Manage Incident Reports</h1>
+        <h1 className="text-2xl font-bold text-gray-900">
+          Manage Incident Reports
+        </h1>
         <p className="mt-1 text-sm text-gray-600">
           Review and manage reported incidents
         </p>
@@ -82,25 +93,27 @@ const filteredIncidents = incidents.filter(incident => {
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg shadow-card">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Search Input */}
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <div className="absolute inset-y-0 left-0 pl-3 hidden sm:flex items-center pointer-events-none">
               <FiSearch className="h-5 w-5 text-gray-400" />
             </div>
             <input
               type="text"
-              className="form-input pl-10"
+              className="w-full border border-gray-300 rounded-md py-2 text-sm focus:outline-none focus:ring-rose-500 focus:border-rose-500 pl-3 sm:pl-10"
               placeholder="Search by reporter, resident, or description..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
+          {/* Filter Dropdown */}
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <div className="absolute inset-y-0 left-0 pl-3 hidden sm:flex items-center pointer-events-none">
               <FiFilter className="h-5 w-5 text-gray-400" />
             </div>
             <select
-              className="form-input pl-10"
+              className="w-full border border-gray-300 rounded-md py-2 text-sm focus:outline-none focus:ring-rose-500 focus:border-rose-500 pl-3 sm:pl-10"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
             >
@@ -143,15 +156,15 @@ const filteredIncidents = incidents.filter(incident => {
                 <tr key={incident._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
-                    {incident.reportedBy?.name || 'Unknown'}
+                      {incident.reportedBy?.name || "Unknown"}
                     </div>
                     <div className="text-sm text-gray-500 capitalize">
-                    {incident.reportedBy?.role || 'Unknown'}
+                      {incident.reportedBy?.role || "Unknown"}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                    {incident.resident?.fullName || 'Unknown'}
+                      {incident.resident?.fullName || "Unknown"}
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -174,7 +187,7 @@ const filteredIncidents = incidents.filter(incident => {
                     >
                       <FiEye className="w-5 h-5" />
                     </button>
-                    {incident.status === 'open' && (
+                    {incident.status === "open" && (
                       <button
                         onClick={() => handleCloseIncident(incident._id)}
                         className="text-green-600 hover:text-green-900"
@@ -191,7 +204,9 @@ const filteredIncidents = incidents.filter(incident => {
           {filteredIncidents.length === 0 && (
             <div className="text-center py-8">
               <FiAlertCircle className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No incidents found</h3>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">
+                No incidents found
+              </h3>
               <p className="mt-1 text-sm text-gray-500">
                 No incidents match your current filters.
               </p>
@@ -224,38 +239,50 @@ const filteredIncidents = incidents.filter(incident => {
 
                     <div className="space-y-4">
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900">Reporter</h4>
+                        <h4 className="text-sm font-medium text-gray-900">
+                          Reporter
+                        </h4>
                         <p className="mt-1 text-sm text-gray-600">
-                        {selectedIncident.reportedBy?.name || 'Unknown'} ({selectedIncident.reportedBy?.role || 'Unknown'})
-
+                          {selectedIncident.reportedBy?.name || "Unknown"} (
+                          {selectedIncident.reportedBy?.role || "Unknown"})
                         </p>
                       </div>
 
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900">Resident</h4>
+                        <h4 className="text-sm font-medium text-gray-900">
+                          Resident
+                        </h4>
                         <p className="mt-1 text-sm text-gray-600">
-                        {selectedIncident.resident?.fullName || 'Unknown'}
+                          {selectedIncident.resident?.fullName || "Unknown"}
                         </p>
                       </div>
 
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900">Description</h4>
+                        <h4 className="text-sm font-medium text-gray-900">
+                          Description
+                        </h4>
                         <p className="mt-1 text-sm text-gray-600">
                           {selectedIncident.description}
                         </p>
                       </div>
 
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900">Status</h4>
+                        <h4 className="text-sm font-medium text-gray-900">
+                          Status
+                        </h4>
                         <div className="mt-1">
                           <StatusBadge status={selectedIncident.status} />
                         </div>
                       </div>
 
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900">Date Reported</h4>
+                        <h4 className="text-sm font-medium text-gray-900">
+                          Date Reported
+                        </h4>
                         <p className="mt-1 text-sm text-gray-600">
-                          {new Date(selectedIncident.createdAt).toLocaleString()}
+                          {new Date(
+                            selectedIncident.createdAt
+                          ).toLocaleString()}
                         </p>
                       </div>
                     </div>
@@ -264,12 +291,12 @@ const filteredIncidents = incidents.filter(incident => {
               </div>
 
               <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                {selectedIncident.status === 'open' && (
+                {selectedIncident.status === "open" && (
                   <button
                     type="button"
                     onClick={() => {
-                      handleCloseIncident(selectedIncident._id)
-                      setShowModal(false)
+                      handleCloseIncident(selectedIncident._id);
+                      setShowModal(false);
                     }}
                     className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm"
                   >
@@ -289,7 +316,7 @@ const filteredIncidents = incidents.filter(incident => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default ManageIncidents
+export default ManageIncidents;

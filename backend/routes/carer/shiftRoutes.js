@@ -5,7 +5,8 @@ const {
     getAssignedShiftsForCarer,
     startShift,
     completeShift,
-    getCompletedShifts
+    getCompletedShifts,
+    getShiftById
   } = require("../../controllers/carer/shiftController");
   
   const asyncHandler = require("../../middleware/asyncHandler");
@@ -14,6 +15,10 @@ router.get("/assigned/:userId", protect, asyncHandler(getAssignedShiftsForCarer)
 router.put("/:id/start", protect, asyncHandler(startShift));
 router.put("/:id/complete", protect, asyncHandler(completeShift));
 router.get("/completed/:userId", protect, asyncHandler(getCompletedShifts));
+// ➤ GET single shift by ID with resident
+router.get("/:id", protect, asyncHandler(getShiftById));
+
+
 
 
 module.exports = router;

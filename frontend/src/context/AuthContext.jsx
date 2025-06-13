@@ -18,16 +18,27 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem("token");
 
       if (!token) {
-        throw new Error("No token found");
+        setIsLoading(false);
+        return;
       }
 
+      // Set the token in axios headers
       axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      
       const res = await axiosInstance.get("/auth/me");
-      setUser(res.data);
-      setIsAuthenticated(true);
+      
+      if (res.data) {
+        setUser(res.data);
+        setIsAuthenticated(true);
+      } else {
+        throw new Error("Invalid user data received");
+      }
     } catch (err) {
       console.error("Auto-login failed:", err);
-      logout(); // Clear token and state
+      // Only logout if it's not a network error
+      if (err.response) {
+        logout();
+      }
     } finally {
       setIsLoading(false);
     }
@@ -35,32 +46,45 @@ export const AuthProvider = ({ children }) => {
 
   // On app load: check for token and fetch user
   useEffect(() => {
-    fetchUserProfile();
+    const token = localStorage.getItem("token");
+    if (token) {
+      fetchUserProfile();
+    } else {
+      setIsLoading(false);
+    }
   }, []);
 
   // Login: store token and fetch profile
   const login = async (email, password) => {
     try {
+      setIsLoading(true);
       const res = await axiosInstance.post("/auth/login", { email, password });
-      const { token } = res.data;
+      const { token, user: userData } = res.data;
+
+      if (!token || !userData) {
+        throw new Error("Invalid login response");
+      }
 
       localStorage.setItem("token", token);
       axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-      await fetchUserProfile();
-      toast.success(`Welcome back!`);
-      return { success: true, role: res.data.user.role };
+      setUser(userData);
+      setIsAuthenticated(true);
+      toast.success(`Welcome back, ${userData.name}!`);
+      return { success: true, role: userData.role };
     } catch (error) {
       console.error("Login failed:", error);
       const msg = error.response?.data?.message || "Login failed. Please try again.";
       toast.error(msg);
       return { success: false, message: msg };
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const logout = () => {
     localStorage.removeItem("token");
-    axiosInstance.defaults.headers.common["Authorization"] = "";
+    delete axiosInstance.defaults.headers.common["Authorization"];
     setUser(null);
     setIsAuthenticated(false);
     navigate("/login");
@@ -84,6 +108,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Protected route wrapper
+  const ProtectedRoute = ({ children }) => {
+    if (isLoading) {
+      return <div>Loading...</div>;
+    }
+
+    if (!isAuthenticated || !user) {
+      navigate("/login");
+      return null;
+    }
+
+    return children;
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -94,6 +132,7 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         setPassword,
+        ProtectedRoute,
       }}
     >
       {children}

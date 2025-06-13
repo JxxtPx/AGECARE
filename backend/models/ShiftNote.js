@@ -25,6 +25,10 @@ const shiftNoteSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  category: {
+    type: String, // Now accepts any string that matches an entry in NoteCategory
+    required: true
+  },
   isFlagged: {
     type: Boolean,
     default: false

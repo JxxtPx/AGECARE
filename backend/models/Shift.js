@@ -38,10 +38,12 @@ const shiftSchema = new mongoose.Schema({
   notes: {
     type: String
   },
-  status: {
-    type: String,
-    enum: ["Scheduled", "Completed", "Missed"],
-    default: "Scheduled"
+status: {
+  type: String,
+  enum: ["scheduled", "in-progress", "completed", "missed"], // Make sure 'completed' is included here
+  default: "scheduled"
+
+
   },
   duration: {
     type: String,

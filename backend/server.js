@@ -14,6 +14,10 @@ const adminFileRoutes = require("./routes/admin/fileRoutes");
 const adminAnalyticsRoutes = require("./routes/admin/analyticsRoutes");
 const adminFamilyRoutes = require("./routes/admin/familyApprovalRoutes");
 const adminVisitRoutes = require("./routes/admin/visitRoutes");
+const adminNoteCategoryRoutes = require("./routes/admin/noteCategoryRoutes");
+const careFormRoutes = require("./routes/admin/careFormRoutes");
+const adminCarePlanRoutes = require('./routes/admin/carePlanRoutes');
+
 
 const nurseShiftRoutes = require("./routes/nurse/shiftRoutes");
 const nurseShiftNoteRoutes = require("./routes/nurse/shiftNoteRoutes");
@@ -22,6 +26,7 @@ const nurseTaskRoutes = require("./routes/nurse/taskRoutes");
 const carerShiftRoutes = require("./routes/carer/shiftRoutes");
 const carerShiftNoteRoutes = require("./routes/carer/shiftNoteRoutes");
 const carerTaskRoutes = require("./routes/carer/taskRoutes");
+
 
 const coordinatorCarePlanRoutes = require("./routes/coordinator/carePlanRoutes");
 const coordinatorTaskRoutes = require("./routes/coordinator/taskRoutes");
@@ -43,6 +48,11 @@ const sharedFileRoutes = require("./routes/shared/fileRoutes");
 const sharedHealthRoutes = require("./routes/shared/healthRecordRoutes");
 const sharedNotificationRoutes = require("./routes/shared/notificationRoutes");
 const sharedProfileRoutes = require("./routes/shared/profileRoutes");
+const sharedNoteCategoryRoutes = require("./routes/shared/noteCategoryRoutes");
+const sharedCareFormRoutes = require('./routes/shared/careFormRoutes')
+const sharedCarePlanRoutes = require('./routes/shared/carePlanRoutes');
+
+
 
 
 dotenv.config();
@@ -69,6 +79,10 @@ app.use("/api/admin/resident-files", adminFileRoutes);
 app.use("/api/admin/analytics", adminAnalyticsRoutes);
 app.use("/api/admin/family", adminFamilyRoutes);
 app.use("/api/admin/visits", adminVisitRoutes);
+app.use("/api/admin/notecategories", adminNoteCategoryRoutes);
+app.use("/api/admin/careforms", careFormRoutes);
+app.use("/api/admin/careplans", adminCarePlanRoutes);
+
 
 app.use("/api/nurse/shifts", nurseShiftRoutes);
 app.use("/api/nurse/shiftnotes", nurseShiftNoteRoutes);
@@ -77,6 +91,7 @@ app.use("/api/nurse/tasks", nurseTaskRoutes);
 app.use("/api/carer/shifts", carerShiftRoutes);
 app.use("/api/carer/shiftnotes", carerShiftNoteRoutes);
 app.use("/api/carer/tasks", carerTaskRoutes);
+
 
 app.use("/api/coordinator/careplans", coordinatorCarePlanRoutes);
 app.use("/api/coordinator/tasks", coordinatorTaskRoutes);
@@ -98,6 +113,12 @@ app.use("/api/shared/files", sharedFileRoutes);
 app.use("/api/shared/health-records", sharedHealthRoutes);
 app.use("/api/shared/notifications", sharedNotificationRoutes);
 app.use("/api/shared/profile", sharedProfileRoutes);
+app.use("/api/shared/notecategories", sharedNoteCategoryRoutes);
+app.use('/api/shared/careforms', sharedCareFormRoutes)
+app.use("/api/shared/careplans", sharedCarePlanRoutes);
+
+
+
 
 
 // === 404 Route ===

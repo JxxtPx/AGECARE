@@ -14,10 +14,7 @@ exports.getAccessibleResidentFiles = async (req, res) => {
   const files = await File.find({
     resident: residentId,
     rolesAllowed: { $in: [role] },
-  })
-    .populate("uploadedBy", "name role")
-    .sort({ createdAt: -1 });
+  }).sort({ createdAt: -1 });
 
-  res.json(files);
+  res.json(files); // files will include title, url, fileType, notes, etc.
 };
-

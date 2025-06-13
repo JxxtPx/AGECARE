@@ -41,7 +41,7 @@ const ManageShifts = () => {
     startTime: "",
     endTime: "",
     type: "Personal Care",
-    status: "Scheduled",
+    status: "scheduled",
     notes: "",
   });
 
@@ -89,7 +89,7 @@ const ManageShifts = () => {
       startTime: "",
       endTime: "",
       type: "Personal Care",
-      status: "Scheduled",
+      status: "scheduled",
       notes: "",
     });
     setShowModal(true);
@@ -104,7 +104,7 @@ const ManageShifts = () => {
       startTime: shift.startTime,
       endTime: shift.endTime,
       type: shift.type,
-      status: shift.status,
+      status: shift.status.toLowerCase(),
       notes: shift.notes,
     });
     setShowModal(true);
@@ -609,9 +609,9 @@ const ManageShifts = () => {
                     }
                     required
                   >
-                    <option value="Scheduled">Scheduled</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Completed">Completed</option>
+                    <option value="scheduled">Scheduled</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="completed">Completed</option>
                   </select>
                 </div>
 

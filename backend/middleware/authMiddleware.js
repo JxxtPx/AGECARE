@@ -13,16 +13,18 @@ const protect = async (req, res, next) => {
       token = req.headers.authorization.split(" ")[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req.user = await User.findById(decoded.id).select("-password");
-      next();
+      
+
+      return next(); // ✅ Successful path ends here
     } catch (error) {
-      res.status(401).json({ message: "Token failed" });
+      console.error("🔐 JWT Error:", error.message);
+      return res.status(401).json({ message: "Token failed" }); // ✅ Make sure to return here
     }
   }
 
-  if (!token) {
-    return res.status(401).json({ message: "Not authorized" });
-  }
+  return res.status(401).json({ message: "Not authorized, no token" }); // ✅ Always return
 };
+
 
 // Admin-only route check
 const adminOnly = (req, res, next) => {

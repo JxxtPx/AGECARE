@@ -18,7 +18,8 @@ const residentSchema = new mongoose.Schema({
     name: String,
     relation: String,
     phone: String,
-    email: String
+    email: String,
+    address: String
   }],
   allergies: [String],
   dietaryPreferences: String,
@@ -32,6 +33,7 @@ const residentSchema = new mongoose.Schema({
   
   roomNumber: String,
   photo: String,
+
   isActive: { type: Boolean, default: true }
 }, { timestamps: true });
 

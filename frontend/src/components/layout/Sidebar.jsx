@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useCallback, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import {
@@ -22,6 +22,19 @@ import {
   FiUser,
 } from "react-icons/fi";
 
+// Debounce function
+const debounce = (func, wait) => {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+};
+
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -29,16 +42,20 @@ const Sidebar = () => {
   const location = useLocation();
   const [pinnedMessages, setPinnedMessages] = useState([]);
 
-  useEffect(() => {
-    const handleResize = () => {
+  // Memoize the resize handler
+  const handleResize = useCallback(
+    debounce(() => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
       setIsOpen(!mobile);
-    };
+    }, 250),
+    []
+  );
 
+  useEffect(() => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [handleResize]);
 
   useEffect(() => {
     if (user?.role === "admin") {
@@ -59,12 +76,13 @@ const Sidebar = () => {
     }
   }, [user]);
 
-  const isActive = (path) => {
+  // Memoize the isActive function
+  const isActive = useMemo(() => (path) => {
     if (path === `/${user?.role}` && location.pathname === `/${user?.role}`) {
       return true;
     }
     return location.pathname.startsWith(path) && path !== `/${user?.role}`;
-  };
+  }, [location.pathname, user?.role]);
 
   const getNavLinks = () => {
     if (!user) return [];

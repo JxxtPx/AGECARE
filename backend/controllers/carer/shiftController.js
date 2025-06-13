@@ -1,7 +1,15 @@
 const Shift = require("../../models/Shift");
+const File = require("../../models/File");
 const createError = require("http-errors");
 
-// ✅ Get assigned upcoming shifts for Carer
+const getShiftType = (startTime) => {
+  const [hour] = startTime.split(":").map(Number);
+  if (hour >= 5 && hour < 13) return "morning";
+  if (hour >= 13 && hour < 21) return "afternoon";
+  return "night";
+};
+
+// ✅ Get assigned upcoming shifts for Carer with shiftType
 exports.getAssignedShiftsForCarer = async (req, res) => {
   const { userId } = req.params;
 
@@ -20,16 +28,30 @@ exports.getAssignedShiftsForCarer = async (req, res) => {
     assignedTo: userId,
     date: { $gte: today },
   })
-    .populate("resident", "fullName roomNumber")
+    .populate(
+      "resident",
+      "fullName roomNumber dateOfBirth contactInfo medicalHistory files"
+    )
     .sort({ date: 1, startTime: 1 });
 
-  res.json(shifts);
+  const enrichedShifts = shifts.map((shift) => ({
+    ...shift.toObject(),
+    shiftType: getShiftType(shift.startTime),
+  }));
+
+  res.json(enrichedShifts);
 };
 
 // ✅ Start a shift
 exports.startShift = async (req, res) => {
-  const shift = await Shift.findById(req.params.id);
-  if (!shift) throw createError(404, "Shift not found");
+  const shift = await Shift.findById(req.params.id).populate(
+    "resident",
+    "fullName roomNumber"
+  );
+
+  if (!shift) {
+    throw createError(404, "Shift not found");
+  }
 
   if (req.user.role !== "carer") {
     throw createError(403, "Access denied: Not a carer");
@@ -39,15 +61,25 @@ exports.startShift = async (req, res) => {
     throw createError(403, "Access denied: Not your shift");
   }
 
-  shift.actualStartTime = new Date().toLocaleTimeString();
+  shift.actualStartTime = new Date().toISOString(); // exact UTC time
+  shift.status = "in-progress"; // use consistent lowercase
+
   await shift.save();
 
-  res.json({ message: "Shift started", time: shift.actualStartTime });
+  res.json({
+    message: "Shift started",
+    time: shift.actualStartTime,
+    shift,
+  });
 };
 
 // ✅ Complete a shift
 exports.completeShift = async (req, res) => {
-  const shift = await Shift.findById(req.params.id);
+  const shift = await Shift.findById(req.params.id).populate(
+    "resident",
+    "fullName roomNumber"
+  );
+
   if (!shift) throw createError(404, "Shift not found");
 
   if (req.user.role !== "carer") {
@@ -58,21 +90,22 @@ exports.completeShift = async (req, res) => {
     throw createError(403, "Access denied: Not your shift");
   }
 
-  shift.actualEndTime = new Date().toLocaleTimeString();
-  shift.status = "Completed";
+  const now = new Date();
+  shift.actualEndTime = now.toISOString();
+  shift.status = "completed"; // use consistent lowercase
 
-  // ✅ Duration Calculation
-  const [startHour, startMin] = shift.actualStartTime.split(":").map(Number);
-  const [endHour, endMin] = new Date().toLocaleTimeString().split(":").map(Number);
-
-  let totalMinutes = endHour * 60 + endMin - (startHour * 60 + startMin);
-  if (totalMinutes < 0) totalMinutes += 1440;
-
+  const start = new Date(shift.actualStartTime);
+  const totalMinutes = Math.round((now - start) / (1000 * 60));
   shift.duration = `${totalMinutes} min`;
 
   await shift.save();
 
-  res.json({ message: "Shift completed", time: shift.actualEndTime });
+  res.json({
+    message: "Shift completed",
+    time: shift.actualEndTime,
+    duration: shift.duration,
+    resident: shift.resident,
+  });
 };
 
 // ✅ Get all completed shifts for Carer
@@ -89,10 +122,47 @@ exports.getCompletedShifts = async (req, res) => {
 
   const shifts = await Shift.find({
     assignedTo: userId,
-    status: "Completed",
+    status: "completed", // match lowercase used during saving
   })
-    .populate("resident", "fullName roomNumber")
+    .populate(
+      "resident",
+      "fullName roomNumber dateOfBirth contactInfo medicalHistory files"
+    )
     .sort({ date: -1 });
 
-  res.json(shifts);
+  const enrichedShifts = shifts.map((shift) => ({
+    ...shift.toObject(),
+    shiftType: getShiftType(shift.startTime),
+  }));
+
+  res.json(enrichedShifts);
+};
+
+
+// ✅ Get single shift by ID
+exports.getShiftById = async (req, res) => {
+  const shiftId = req.params.id;
+
+  const shift = await Shift.findById(shiftId)
+    .populate({
+      path: 'resident',
+      select: 'fullName gender dateOfBirth allergies roomNumber contactInfo emergencyContacts'
+    });
+
+  if (!shift) {
+    throw createError(404, "Shift not found");
+  }
+
+  // Check carer access
+  if (req.user.role !== "carer") {
+    throw createError(403, "Access denied: Not a carer");
+  }
+
+  if (shift.assignedTo.toString() !== req.user._id.toString()) {
+    throw createError(403, "Access denied: Not your shift");
+  }
+  // console.log("Resident data:", shift.resident);
+
+
+  res.json(shift);
 };

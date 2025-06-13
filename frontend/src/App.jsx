@@ -60,6 +60,7 @@ const CarerViewResidents = lazy(() => import("./pages/carer/ViewResidents"));
 const CarerReportIncidents = lazy(() =>
   import("./pages/carer/ReportIncidents")
 );
+const ShiftDetailPage = lazy(() => import("./pages/carer/ShiftDetailPage"));
 const CarerProfile = lazy(() => import("./pages/carer/Profile"));
 
 const ResidentDashboard = lazy(() => import("./pages/resident/Dashboard"));
@@ -360,6 +361,15 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/carer/shift/:id"
+          element={
+            <ProtectedRoute allowedRoles={["carer"]}>
+              <ShiftDetailPage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/carer/residents"
           element={
